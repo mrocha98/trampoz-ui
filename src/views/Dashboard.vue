@@ -7,7 +7,7 @@
     <form @submit.prevent="greet">
       <InputText type="text" v-model="text"/>
       <Button type="submit" label="Submit"/>
-      <h3>{{message}}</h3>
+      <h3>{{ message }}</h3>
     </form>
   </div>
 
@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component'
-import HelloWorld from '@/components/HelloWorld.vue' // @ is an alias to /src
+import HelloWorld from '@/components/HelloWorld.vue'
 
 @Options({
   components: {
@@ -24,8 +24,9 @@ import HelloWorld from '@/components/HelloWorld.vue' // @ is an alias to /src
   }
 })
 export default class Dashboard extends Vue {
-  public message = '';
-  public text = '';
+  public message = ''
+  public text = ''
+
   public greet () {
     if (this.text.length) {
       this.message = 'Hello ' + this.text

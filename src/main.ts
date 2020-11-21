@@ -1,17 +1,14 @@
 import { createApp } from 'vue'
-import VueAxios from 'vue-axios'
-import App from './App.vue'
-import router from './router'
-import store from './store'
-import api from './services/api'
+import { router } from './router'
+import { store } from './store'
 import primevue from './primevue-setup'
+import App from './App.vue'
 
 const app = createApp(App)
 
 app
   .use(store)
   .use(router)
-  .use(VueAxios, api)
   .use(primevue.ToastService)
 
 app

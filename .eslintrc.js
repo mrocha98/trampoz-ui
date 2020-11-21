@@ -19,6 +19,6 @@ module.exports = {
     'no-console': 'off',
     'no-debugger': 'off',
     'vue/no-multiple-template-root': 'off',
-    'vue/no-deprecated-slot-attribute': 'off'
+    '@typescript-eslint/member-delimiter-style': 'off'
   }
 }
