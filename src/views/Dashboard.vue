@@ -1,45 +1,28 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png">
-
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-
-    <form @submit.prevent="greet">
-      <InputText type="text" v-model="text"/>
-      <Button type="submit" label="Submit"/>
-      <h3>{{ message }}</h3>
-    </form>
-  </div>
-
-  <Paginator :rows="10" :totalRecords="50"></Paginator>
+  <section class="dashboard">
+    <h1>Welcome!</h1>
+    <p>Logged as: {{ email }}</p>
+    <img alt="illustration" src="@/assets/dashboard.png" />
+  </section>
 </template>
 
 <script lang="ts">
-import { Options, Vue } from 'vue-class-component'
-import HelloWorld from '@/components/HelloWorld.vue'
+import { computed } from 'vue'
+import { Vue } from 'vue-class-component'
+import { useStore } from '@/store'
 
-@Options({
-  components: {
-    HelloWorld
-  }
-})
 export default class Dashboard extends Vue {
-  public message = ''
-  public text = ''
-
-  public greet () {
-    if (this.text.length) {
-      this.message = 'Hello ' + this.text
-    }
-  }
+  public store = useStore()
+  public email = computed(() => this.store.state.user.email)
 }
 </script>
 
 <style lang="scss" scoped>
-  .p-button {
-    margin-left: .2em;
-  }
-  form {
-    margin-top: 2em;
+  img {
+    min-height: 256px;
+    min-width: 328px;
+
+    max-height: 75%;
+    max-width: 75%;
   }
 </style>
