@@ -9,24 +9,22 @@ const app = createApp(App)
 app
   .use(store)
   .use(router)
-  .use(primevue.ToastService)
 
 app
   .component('Button', primevue.Button)
-  .component('AutoComplete', primevue.AutoComplete)
   .component('Calendar', primevue.Calendar)
-  .component('Editor', primevue.Calendar)
   .component('InputNumber', primevue.InputNumber)
   .component('InputText', primevue.InputText)
+  .component('Textarea', primevue.Textarea)
   .component('SelectButton', primevue.SelectButton)
-  .component('Password', primevue.Password)
-  .component('Paginator', primevue.Paginator)
+  .component('Dropdown', primevue.Dropdown)
+  .component('DataTable', primevue.DataTable)
+  .component('Column', primevue.Column)
   .component('Dialog', primevue.Dialog)
   .component('Message', primevue.Message)
-  .component('Toast', primevue.Toast)
   .component('Menubar', primevue.Menubar)
-  .component('ProgressSpinner', primevue.ProgressSpinner)
   .component('Card', primevue.Card)
+  .component('Toolbar', primevue.Toolbar)
 
 app.config.globalProperties.$primevue = { ripple: true }
 

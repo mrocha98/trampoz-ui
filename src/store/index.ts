@@ -4,9 +4,10 @@ import { VuexPersistence } from 'vuex-persist'
 import { State, state } from './state'
 import { mutations } from './mutations'
 import { actions } from './actions'
+import { stateKey } from '@/constants/localStorage'
 
 const { plugin: persistencePlugin } = new VuexPersistence({
-  key: '@trampoz',
+  key: stateKey,
   storage: window.localStorage
 })
 

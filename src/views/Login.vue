@@ -1,4 +1,5 @@
 <template>
+  <section class="login">
     <Card class="p-px-6 p-pt-2">
       <template v-slot:title>
         <span class="p-text-uppercase">Login</span>
@@ -37,6 +38,7 @@
         </form>
       </template>
     </Card>
+  </section>
 </template>
 
 <script lang="ts">
