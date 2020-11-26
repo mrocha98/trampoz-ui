@@ -21,7 +21,7 @@
           </template>
         </Toolbar>
 
-        <DataTable :value="jobs" class="p-mt-5">
+        <DataTable :value="jobs" :rowHover="true" class="p-mt-5">
           <template #header>
             <div class="p-d-flex p-jc-between">
               <h2 class="p-m-0">Jobs</h2>
@@ -31,6 +31,28 @@
 
           <Column field="title" header="Title"></Column>
           <Column field="description" header="Description"></Column>
+          <Column header="Publishing Date">
+            <template #body="slotProps">
+              <span>{{ slotProps.data.publishingDate }}</span>
+            </template>
+          </Column>
+          <Column header="Location">
+            <template #body="slotProps">
+              <span>{{ slotProps.data.state }} - {{ slotProps.data.city }}</span>
+            </template>
+          </Column>
+          <Column header="Type">
+            <template #body="slotProps">
+              <span v-if="slotProps.data.isRemote" class="p-tag p-tag-warning">REMOTE</span>
+              <span v-else class="p-tag p-tag-info">PRESENTIAL</span>
+            </template>
+          </Column>
+          <Column header="Status">
+            <template #body="slotProps">
+              <span v-if="slotProps.data.isOpen" class="p-tag p-tag-success">OPEN</span>
+              <span v-else class="p-tag p-tag-danger">CLOSED</span>
+            </template>
+          </Column>
           <Column header="Actions" >
             <template #body="slotProps">
                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-mr-2" @click="editJob(slotProps.data)" />
@@ -45,15 +67,15 @@
       </template>
     </Card>
 
-    <Dialog :visible="dialog.isDeleteOpen" :closable="false" header="Delete confirmation" :modal="true">
+    <Dialog :visible="dialog.isDeleteOpen" :closable="false" header="Confirmation" :modal="true" style="min-width: 50%">
       <div class="confirmation-content">
         <i class="pi pi-exclamation-triangle p-mr-3" style="font-size: 1rem" />
-        <span>{{ dialog.job.title }}</span>
-        <span v-if="dialog.job">Are you sure?</span>
+        <span v-if="dialog.job">The job: "{{ dialog.job.title }}" will be deleted</span>
+        <p>Proceed?</p>
       </div>
       <template #footer>
         <Button label="No" icon="pi pi-times" class="p-button-text" @click="dialog.isDeleteOpen = false"/>
-        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="console.log('zap')" />
+        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="() => deleteJob(dialog.job.id)" />
       </template>
       </Dialog>
   </section>
@@ -62,62 +84,74 @@
 <script lang="ts">
 import { computed } from 'vue'
 import { Vue } from 'vue-class-component'
-import { get, assign } from 'lodash'
+import { get, set } from 'lodash'
 import { useStore } from '@/store'
 import { ActionTypes } from '@/store/actions'
 import { Job } from '@/store/state'
 
 export default class Jobs extends Vue {
-  public store = useStore()
+   store = useStore()
 
-  public jobs = computed(() => this.store.state.fetchedJobs.jobs)
-  public total = computed(() => this.store.state.fetchedJobs.total)
-  public pages = computed(() => this.store.state.fetchedJobs.pages)
-  public hasPreviousPage = computed(() => this.store.state.fetchedJobs.hasPreviousPage)
-  public hasNextPage = computed(() => this.store.state.fetchedJobs.hasNextPage)
+   jobs = computed(() => this.store.state.fetchedJobs.jobs)
+   total = computed(() => this.store.state.fetchedJobs.total)
+   pages = computed(() => this.store.state.fetchedJobs.pages)
+   hasPreviousPage = computed(() => this.store.state.fetchedJobs.hasPreviousPage)
+   hasNextPage = computed(() => this.store.state.fetchedJobs.hasNextPage)
 
-  public page = 1
-  public limit = 5
+   page = 1
+   limit = 5
 
-  readonly limitOptions = [
+  limitOptions = [
     { value: 5 },
     { value: 10 },
     { value: 15 },
     { value: 20 }
   ]
 
-  public dialog = {
-    isCreationOpen: false,
-    isEditOpen: false,
-    isDeleteOpen: false,
-    job: {} as Job
-  }
+   dialog = {
+     isCreationOpen: false,
+     isEditOpen: false,
+     isDeleteOpen: false,
+     job: {} as Job
+   }
 
-  public async fetchJobs () {
-    const paginationParams = { page: this.page, limit: this.limit }
-    await this.store.dispatch(ActionTypes.FetchJobs, paginationParams)
-  }
+   async fetchJobs () {
+     const paginationParams = { page: this.page, limit: this.limit }
+     await this.store.dispatch(ActionTypes.FetchJobs, paginationParams)
+   }
 
-  async mounted () {
-    await this.fetchJobs()
-  }
+   async mounted () {
+     await this.fetchJobs()
+   }
 
-  async goToNextPage () {
-    this.page++
-    await this.fetchJobs()
-  }
+   async goToNextPage () {
+     this.page++
+     await this.fetchJobs()
+   }
 
-  async goToPeviousPage () {
-    this.page--
-    await this.fetchJobs()
-  }
+   async goToPeviousPage () {
+     this.page--
+     await this.fetchJobs()
+   }
 
-  openDeleteDialog (job: Job) {
-    const id = get(job, 'id')
-    const title = get(job, 'title')
+   openDeleteDialog (job: Job) {
+     const id = get(job, 'id')
+     const title = get(job, 'title')
 
-    assign(this.dialog.job, id, title)
-    this.dialog.isDeleteOpen = true
-  }
+     set(this.dialog, 'job.id', id)
+     set(this.dialog, 'job.title', title)
+
+     this.dialog.isDeleteOpen = true
+   }
+
+   async deleteJob (id: string) {
+     try {
+       await this.store.dispatch(ActionTypes.DeleteJob, { id })
+     } catch (error) {
+       console.log(error)
+     } finally {
+       this.dialog.isDeleteOpen = false
+     }
+   }
 }
 </script>

@@ -11,7 +11,7 @@ export enum MutationType {
   SetFetchedJobsPages = 'SET_FETCHED_JOBS_PAGES',
   SetFetchedJobsHasPreviousPage = 'SET_FETCHED_JOBS_HAS_PREVIOUS_PAGE',
   SetFetchedJobsHasNextPage = 'SET_FETCHED_JOBS_HAS_NEXT_PAGE',
-  SetFetchedJobsTotal = 'SET_FETCHED_JOBS_TOTAL'
+  SetFetchedJobsTotal = 'SET_FETCHED_JOBS_TOTAL',
 }
 
 export type Mutations = {
@@ -50,12 +50,13 @@ export const mutations: MutationTree<State> & Mutations = {
       description: get(job, 'description'),
       city: get(job, 'city'),
       state: get(job, 'state'),
+      publishingDate: get(job, 'publishingDate'),
       isOpen: get(job, 'isOpen'),
       isRemote: get(job, 'isRemote'),
       contractor: {
         id: get(job, 'contractor.id'),
         companyName: get(job, 'contractor.companyName'),
-        companyLogoLink: get(job, 'contractor.companyLogoLin')
+        companyLogoLink: get(job, 'contractor.companyLogoLink')
       }
     } as Job))
 

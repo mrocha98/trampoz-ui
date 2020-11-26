@@ -1,5 +1,5 @@
 import { ActionContext, ActionTree } from 'vuex'
-import { get } from 'lodash'
+import { get, filter } from 'lodash'
 import { MutationType } from './mutations'
 import { FetchedJobs, State, User } from './state'
 import { api } from '@/services/api'
@@ -7,7 +7,8 @@ import { api } from '@/services/api'
 export enum ActionTypes {
   Login = 'LOGIN',
   Logout = 'LOGOUT',
-  FetchJobs = 'FETCH_JOBS'
+  FetchJobs = 'FETCH_JOBS',
+  DeleteJob = 'DELETE_JOB'
 }
 
 type Context = ActionContext<State, State>
@@ -16,6 +17,7 @@ export type Actions = {
   [ActionTypes.Login](context: Context, payload: User): void
   [ActionTypes.Logout](context: Context): void
   [ActionTypes.FetchJobs](context: Context, payload: { page: number, limit: number }): void
+  [ActionTypes.DeleteJob](context: Context, payload: { id: string }): void
 }
 
 export const actions: ActionTree<State, State> & Actions = {
@@ -53,5 +55,16 @@ export const actions: ActionTree<State, State> & Actions = {
     commit(MutationType.SetFetchedJobsTotal, get(data, 'total'))
     commit(MutationType.SetFetchedJobsHasPreviousPage, get(data, 'hasPreviousPage'))
     commit(MutationType.SetFetchedJobsHasNextPage, get(data, 'hasNextPage'))
+  },
+
+  async [ActionTypes.DeleteJob] ({ commit, state }, { id }) {
+    await api.delete(`/jobs?id=${id}`)
+
+    const jobs = get(state, 'fetchedJobs.jobs', [])
+    const filteredJobs = filter(jobs, (job) => id !== get(job, 'id', ''))
+    const total = state.fetchedJobs.total - 1
+
+    commit(MutationType.SetFetchedJobs, filteredJobs)
+    commit(MutationType.SetFetchedJobsTotal, total)
   }
 }
