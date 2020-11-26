@@ -38,10 +38,7 @@
           </Column>
           <Column header="Contractor">
             <template #body="slotProps">
-              <figure>
-                <img class="rounded-image" :src="slotProps.data.contractor.companyLogoLink" />
-                <figcaption>{{ slotProps.data.contractor.companyName }}</figcaption>
-              </figure>
+              <ContractorInfo :name="slotProps.data.contractor.companyName" :logoLink="slotProps.data.contractor.companyLogoLink" />
             </template>
           </Column>
           <Column header="Location">
@@ -83,7 +80,7 @@
       </div>
       <template #footer>
         <Button label="No" icon="pi pi-times" class="p-button-text" @click="closeDeleteDialog()"/>
-        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="() => deleteJob(dialog.job.id)" />
+        <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="deleteJob(dialog.job.id)" />
       </template>
     </Dialog>
 
@@ -95,17 +92,12 @@
             <Dropdown id="contractor" name="contractor" v-model="dialog.job.contractor" placeholder="Select a Contractor"
               :options="contractors" optionLabel="companyName" :showClear="true">
               <template #value="slotProps">
-                <figure v-if="slotProps.value">
-                  <img class="rounded-image" :src="slotProps.value.companyLogoLink">
-                  <figcaption>{{ slotProps.value.companyName }}</figcaption>
-                </figure>
+                <ContractorInfo v-if="slotProps.value" :name="slotProps.value.companyName"
+                  :logoLink="slotProps.value.companyLogoLink" />
                 <p v-else>{{ slotProps.placeholder }}</p>
               </template>
               <template #option="slotProps">
-                <figure>
-                  <img class="rounded-image" :src="slotProps.option.companyLogoLink">
-                  <figcaption>{{ slotProps.option.companyName }}</figcaption>
-                </figure>
+                <ContractorInfo :name="slotProps.option.companyName" :logoLink="slotProps.option.companyLogoLink" />
               </template>
             </Dropdown>
           </div>
@@ -119,7 +111,7 @@
           </div>
           <div class="p-field p-col-2">
             <label for="state">State</label>
-            <InputText id="state" name="state" v-model="dialog.job.state" required />
+            <InputText id="state" name="state" v-model="dialog.job.state" required maxlength="2" />
           </div>
           <div class="p-field p-col-10">
             <label for="city">City</label>
@@ -138,8 +130,8 @@
           </div>
         </div>
         <div class="p-text-right">
-        <Button label="Cancel" icon="pi pi-times" class="p-button-danger p-mr-3" @click="closeCreateDialog()"/>
-        <Button label="Create" icon="pi pi-check" class="p-button-success" type="submit" />
+          <Button label="Cancel" icon="pi pi-times" class="p-button-danger p-mr-3" @click="closeCreateDialog()"/>
+          <Button label="Create" icon="pi pi-check" class="p-button-success" type="submit" />
         </div>
       </form>
     </Dialog>
@@ -148,13 +140,19 @@
 
 <script lang="ts">
 import { computed } from 'vue'
-import { Vue } from 'vue-class-component'
-import { clone, get, isEmpty, set, cloneDeep, unset } from 'lodash'
+import { Vue, Options } from 'vue-class-component'
+import { get, isEmpty, set, cloneDeep, unset } from 'lodash'
 import { formatISO } from 'date-fns'
 import { useStore } from '@/store'
-import { ActionTypes } from '@/store/actions'
 import { Job } from '@/store/state'
+import { ActionTypes } from '@/store/actions'
+import ContractorInfo from '@/components/ContractorInfo.vue'
 
+@Options({
+  components: {
+    ContractorInfo
+  }
+})
 export default class Jobs extends Vue {
    store = useStore()
 
@@ -207,6 +205,10 @@ export default class Jobs extends Vue {
      await this.fetchJobs()
    }
 
+   resetDialogJob () {
+     set(this.dialog, 'job', {})
+   }
+
    openDeleteDialog (job: Job) {
      const id = get(job, 'id')
      const title = get(job, 'title')
@@ -219,6 +221,7 @@ export default class Jobs extends Vue {
 
    closeDeleteDialog () {
      this.dialog.isDeleteOpen = false
+     this.resetDialogJob()
    }
 
    async deleteJob (id: string) {
@@ -231,6 +234,14 @@ export default class Jobs extends Vue {
      }
    }
 
+   isJobInvalid (): boolean {
+     const contractor = get(this.dialog.job, 'contractor')
+     const IS_JOB_EMPTY = isEmpty(this.dialog.job)
+     const IS_CONTRACTOR_EMPTY = isEmpty(contractor)
+
+     return IS_JOB_EMPTY || IS_CONTRACTOR_EMPTY
+   }
+
    openCreateDialog () {
      set(this.dialog, 'job.publishingDate', formatISO(new Date(), { representation: 'date' }))
      set(this.dialog, 'job.isOpen', true)
@@ -241,32 +252,20 @@ export default class Jobs extends Vue {
 
    closeCreateDialog () {
      this.dialog.isCreateOpen = false
+     this.resetDialogJob()
    }
 
    async createJob () {
-     const contractor = get(this.dialog.job, 'contractor')
-
-     const IS_JOB_EMPTY = isEmpty(this.dialog.job)
-     const IS_CONTRACTOR_EMPTY = isEmpty(contractor)
-     if (IS_JOB_EMPTY || IS_CONTRACTOR_EMPTY) return
+     if (this.isJobInvalid()) return
 
      const jobToSubmit = cloneDeep(this.dialog.job)
      const contractorId = get(jobToSubmit, 'contractor.id', '')
      set(jobToSubmit, 'contractorId', contractorId)
      unset(jobToSubmit, 'contractor')
 
-     console.log(jobToSubmit)
+     await this.store.dispatch(ActionTypes.CreateJob, jobToSubmit)
 
-     // this.closeCreateDialog()
+     this.closeCreateDialog()
    }
 }
 </script>
-
-<style lang="scss" scoped>
-  .rounded-image {
-    border-radius: 50%;
-
-    height: 48px;
-    widows: 48px;
-  }
-</style>
