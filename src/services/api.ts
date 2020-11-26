@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { get } from 'lodash'
-import { extractUser } from '@/utils/extractFromLocalStorage'
+import { extractUser } from '@/utils/localStorage'
 
 const user = extractUser()
 const username = get(user, 'email')

@@ -4,7 +4,7 @@
       <img alt="logo" src="@/assets/logo.png" />
     </template>
     <template #end>
-      <Button v-if="isVisible()" label="Logout" @click="logout" icon="pi pi-power-off" class="p-button-danger p-mr-3" />
+      <LogoutButton v-if="isVisible()" class="p-mr-3" />
     </template>
   </Menubar>
 </template>
@@ -12,8 +12,7 @@
 <script lang="ts">
 import { defineComponent, ref } from 'vue'
 import { useStore } from '@/store'
-import { useRouter } from 'vue-router'
-import { ActionTypes } from '@/store/actions'
+import LogoutButton from './LogoutButton.vue'
 
 export type MenuItem = {
   label: string
@@ -27,23 +26,23 @@ export type MenuItem = {
 export type MenuItems = MenuItem[]
 
 export default defineComponent({
+  components: {
+    LogoutButton
+  },
   setup () {
     const store = useStore()
-    const router = useRouter()
 
     const isVisible = () => store.state.auth.signed
-
-    const logout = () => {
-      store.dispatch(ActionTypes.Logout)
-      router.push({ name: 'Login' })
-    }
 
     const items = ref([
       { label: 'Dashboard', icon: 'pi pi-fw pi-chart-line', to: '/dashboard', visible: isVisible },
       { label: 'Jobs', icon: 'pi pi-fw pi-briefcase', to: '/jobs', visible: isVisible }
     ] as MenuItems)
 
-    return { isVisible, logout, items }
+    return {
+      isVisible,
+      items
+    }
   }
 })
 </script>
