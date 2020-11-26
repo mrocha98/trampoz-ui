@@ -10,6 +10,7 @@ import Calendar from 'primevue/calendar'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
+import RadioButton from 'primevue/radiobutton'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
@@ -27,6 +28,7 @@ export default {
   InputText,
   Textarea,
   SelectButton,
+  RadioButton,
   Dropdown,
   DataTable,
   Column,

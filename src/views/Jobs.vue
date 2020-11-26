@@ -5,7 +5,7 @@
         <Toolbar>
           <template v-slot:left>
             <Button label="Reload" icon="pi pi-refresh" class="p-mr-2 p-button-info" @click="fetchJobs()" />
-            <Button label="New" icon="pi pi-plus" />
+            <Button label="New" icon="pi pi-plus" @click="openCreateDialog()" />
           </template>
 
           <template v-slot:right>
@@ -36,6 +36,14 @@
               <span>{{ slotProps.data.publishingDate }}</span>
             </template>
           </Column>
+          <Column header="Contractor">
+            <template #body="slotProps">
+              <figure>
+                <img class="rounded-image" :src="slotProps.data.contractor.companyLogoLink" />
+                <figcaption>{{ slotProps.data.contractor.companyName }}</figcaption>
+              </figure>
+            </template>
+          </Column>
           <Column header="Location">
             <template #body="slotProps">
               <span>{{ slotProps.data.state }} - {{ slotProps.data.city }}</span>
@@ -53,7 +61,7 @@
               <span v-else class="p-tag p-tag-danger">CLOSED</span>
             </template>
           </Column>
-          <Column header="Actions" >
+          <Column header="Actions">
             <template #body="slotProps">
                 <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-mr-2" @click="editJob(slotProps.data)" />
                 <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="openDeleteDialog(slotProps.data)" />
@@ -67,24 +75,82 @@
       </template>
     </Card>
 
-    <Dialog :visible="dialog.isDeleteOpen" :closable="false" header="Confirmation" :modal="true" style="min-width: 50%">
+    <Dialog :visible="dialog.isDeleteOpen" :closable="false" header="Confirmation" :modal="true" style="min-width: 30%">
       <div class="confirmation-content">
         <i class="pi pi-exclamation-triangle p-mr-3" style="font-size: 1rem" />
         <span v-if="dialog.job">The job: "{{ dialog.job.title }}" will be deleted</span>
         <p>Proceed?</p>
       </div>
       <template #footer>
-        <Button label="No" icon="pi pi-times" class="p-button-text" @click="dialog.isDeleteOpen = false"/>
+        <Button label="No" icon="pi pi-times" class="p-button-text" @click="closeDeleteDialog()"/>
         <Button label="Yes" icon="pi pi-check" class="p-button-text" @click="() => deleteJob(dialog.job.id)" />
       </template>
-      </Dialog>
+    </Dialog>
+
+    <Dialog :visible="dialog.isCreateOpen" :closable="false" header="Create a new job" :modal="true" style="min-width: 50%">
+      <form @submit.prevent="createJob" class="p-text-left">
+        <div class="p-fluid p-formgrid p-grid">
+          <div class="p-field p-col-12">
+            <label for="contractor">Contractor</label>
+            <Dropdown id="contractor" name="contractor" v-model="dialog.job.contractor" placeholder="Select a Contractor"
+              :options="contractors" optionLabel="companyName" :showClear="true">
+              <template #value="slotProps">
+                <figure v-if="slotProps.value">
+                  <img class="rounded-image" :src="slotProps.value.companyLogoLink">
+                  <figcaption>{{ slotProps.value.companyName }}</figcaption>
+                </figure>
+                <p v-else>{{ slotProps.placeholder }}</p>
+              </template>
+              <template #option="slotProps">
+                <figure>
+                  <img class="rounded-image" :src="slotProps.option.companyLogoLink">
+                  <figcaption>{{ slotProps.option.companyName }}</figcaption>
+                </figure>
+              </template>
+            </Dropdown>
+          </div>
+          <div class="p-field p-col-12">
+            <label for="title">Title</label>
+            <InputText id="title" name="title" v-model="dialog.job.title" required />
+          </div>
+          <div class="p-field p-col-12">
+            <label for="description">Description</label>
+            <Textarea id="description" name="description" v-model="dialog.job.description" :autoResize="true" required />
+          </div>
+          <div class="p-field p-col-2">
+            <label for="state">State</label>
+            <InputText id="state" name="state" v-model="dialog.job.state" required />
+          </div>
+          <div class="p-field p-col-10">
+            <label for="city">City</label>
+            <InputText id="city" name="city" v-model="dialog.job.city" required />
+          </div>
+          <div class="field p-col-6">
+            <label>Type</label>
+            <div class="p-field-radiobutton p-mt-2">
+              <RadioButton id="isRemoteTrue" name="isRemote" :value="true" v-model="dialog.job.isRemote" />
+              <label for="isRemote">Remote</label>
+            </div>
+            <div class="p-field-radiobutton">
+              <RadioButton id="isRemoteFalse" name="isRemote" :value="false" v-model="dialog.job.isRemote" />
+              <label for="isRemoteFalse">Presential</label>
+            </div>
+          </div>
+        </div>
+        <div class="p-text-right">
+        <Button label="Cancel" icon="pi pi-times" class="p-button-danger p-mr-3" @click="closeCreateDialog()"/>
+        <Button label="Create" icon="pi pi-check" class="p-button-success" type="submit" />
+        </div>
+      </form>
+    </Dialog>
   </section>
 </template>
 
 <script lang="ts">
 import { computed } from 'vue'
 import { Vue } from 'vue-class-component'
-import { get, set } from 'lodash'
+import { clone, get, isEmpty, set, cloneDeep, unset } from 'lodash'
+import { formatISO } from 'date-fns'
 import { useStore } from '@/store'
 import { ActionTypes } from '@/store/actions'
 import { Job } from '@/store/state'
@@ -98,6 +164,8 @@ export default class Jobs extends Vue {
    hasPreviousPage = computed(() => this.store.state.fetchedJobs.hasPreviousPage)
    hasNextPage = computed(() => this.store.state.fetchedJobs.hasNextPage)
 
+   contractors = computed(() => this.store.state.fetchedContractors.contractors)
+
    page = 1
    limit = 5
 
@@ -109,7 +177,7 @@ export default class Jobs extends Vue {
   ]
 
    dialog = {
-     isCreationOpen: false,
+     isCreateOpen: false,
      isEditOpen: false,
      isDeleteOpen: false,
      job: {} as Job
@@ -120,8 +188,13 @@ export default class Jobs extends Vue {
      await this.store.dispatch(ActionTypes.FetchJobs, paginationParams)
    }
 
+   async fetchContractors () {
+     await this.store.dispatch(ActionTypes.FetchContractors)
+   }
+
    async mounted () {
      await this.fetchJobs()
+     await this.fetchContractors()
    }
 
    async goToNextPage () {
@@ -144,14 +217,56 @@ export default class Jobs extends Vue {
      this.dialog.isDeleteOpen = true
    }
 
+   closeDeleteDialog () {
+     this.dialog.isDeleteOpen = false
+   }
+
    async deleteJob (id: string) {
      try {
        await this.store.dispatch(ActionTypes.DeleteJob, { id })
      } catch (error) {
        console.log(error)
      } finally {
-       this.dialog.isDeleteOpen = false
+       this.closeDeleteDialog()
      }
+   }
+
+   openCreateDialog () {
+     set(this.dialog, 'job.publishingDate', formatISO(new Date(), { representation: 'date' }))
+     set(this.dialog, 'job.isOpen', true)
+     set(this.dialog, 'job.isRemote', true)
+
+     this.dialog.isCreateOpen = true
+   }
+
+   closeCreateDialog () {
+     this.dialog.isCreateOpen = false
+   }
+
+   async createJob () {
+     const contractor = get(this.dialog.job, 'contractor')
+
+     const IS_JOB_EMPTY = isEmpty(this.dialog.job)
+     const IS_CONTRACTOR_EMPTY = isEmpty(contractor)
+     if (IS_JOB_EMPTY || IS_CONTRACTOR_EMPTY) return
+
+     const jobToSubmit = cloneDeep(this.dialog.job)
+     const contractorId = get(jobToSubmit, 'contractor.id', '')
+     set(jobToSubmit, 'contractorId', contractorId)
+     unset(jobToSubmit, 'contractor')
+
+     console.log(jobToSubmit)
+
+     // this.closeCreateDialog()
    }
 }
 </script>
+
+<style lang="scss" scoped>
+  .rounded-image {
+    border-radius: 50%;
+
+    height: 48px;
+    widows: 48px;
+  }
+</style>

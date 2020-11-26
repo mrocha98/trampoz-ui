@@ -1,6 +1,6 @@
 import { MutationTree } from 'vuex'
 import { get, map } from 'lodash'
-import { Job, State, User } from './state'
+import { Contractor, Job, State, User } from './state'
 
 export enum MutationType {
   SetUser = 'SET_USER',
@@ -12,6 +12,7 @@ export enum MutationType {
   SetFetchedJobsHasPreviousPage = 'SET_FETCHED_JOBS_HAS_PREVIOUS_PAGE',
   SetFetchedJobsHasNextPage = 'SET_FETCHED_JOBS_HAS_NEXT_PAGE',
   SetFetchedJobsTotal = 'SET_FETCHED_JOBS_TOTAL',
+  SetFetchedContractors = 'SET_FETCHED_CONTRACTORS'
 }
 
 export type Mutations = {
@@ -24,6 +25,7 @@ export type Mutations = {
   [MutationType.SetFetchedJobsHasPreviousPage](state: State, hasPreviousPage: boolean): void
   [MutationType.SetFetchedJobsHasNextPage](state: State, hasNextPage: boolean): void
   [MutationType.SetFetchedJobsTotal](state: State, total: number): void
+  [MutationType.SetFetchedContractors](state: State, contractors: Contractor[]): void
 }
 
 export const mutations: MutationTree<State> & Mutations = {
@@ -77,5 +79,15 @@ export const mutations: MutationTree<State> & Mutations = {
 
   [MutationType.SetFetchedJobsTotal] (state, total) {
     state.fetchedJobs.total = Math.abs(total)
+  },
+
+  [MutationType.SetFetchedContractors] (state, contractors) {
+    const mappedContractors = map(contractors, (contractor) => ({
+      id: get(contractor, 'id'),
+      companyName: get(contractor, 'companyName'),
+      companyLogoLink: get(contractor, 'companyLogoLink')
+    } as Contractor))
+
+    state.fetchedContractors.contractors = mappedContractors
   }
 }

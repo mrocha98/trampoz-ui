@@ -17,6 +17,7 @@ app
   .component('InputText', primevue.InputText)
   .component('Textarea', primevue.Textarea)
   .component('SelectButton', primevue.SelectButton)
+  .component('RadioButton', primevue.RadioButton)
   .component('Dropdown', primevue.Dropdown)
   .component('DataTable', primevue.DataTable)
   .component('Column', primevue.Column)

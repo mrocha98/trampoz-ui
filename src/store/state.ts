@@ -37,10 +37,15 @@ export interface FetchedJobs extends PaginationInfo {
   jobs: Job[]
 }
 
+export interface FetchedContractors extends PaginationInfo {
+  contractors: Contractor[]
+}
+
 export type State = {
   user: User
   auth: Auth
   fetchedJobs: FetchedJobs
+  fetchedContractors: FetchedContractors
 }
 
 export const state: State = {
@@ -51,6 +56,13 @@ export const state: State = {
   },
   fetchedJobs: {
     jobs: [],
+    hasNextPage: false,
+    hasPreviousPage: false,
+    pages: 0,
+    total: 0
+  },
+  fetchedContractors: {
+    contractors: [],
     hasNextPage: false,
     hasPreviousPage: false,
     pages: 0,
