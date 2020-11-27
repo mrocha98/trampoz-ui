@@ -13,7 +13,6 @@ app
 app
   .component('Button', primevue.Button)
   .component('Calendar', primevue.Calendar)
-  .component('InputNumber', primevue.InputNumber)
   .component('InputText', primevue.InputText)
   .component('Textarea', primevue.Textarea)
   .component('SelectButton', primevue.SelectButton)

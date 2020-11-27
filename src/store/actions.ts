@@ -1,5 +1,5 @@
 import { ActionContext, ActionTree } from 'vuex'
-import { get, filter, unset } from 'lodash'
+import { get, filter, unset, findIndex } from 'lodash'
 import { MutationType } from './mutations'
 import { FetchedContractors, FetchedJobs, Job, State, User } from './state'
 import { api } from '@/services/api'
@@ -10,6 +10,7 @@ export enum ActionTypes {
   FetchJobs = 'FETCH_JOBS',
   DeleteJob = 'DELETE_JOB',
   CreateJob = 'CREATE_JOB',
+  UpdateJob = 'UPDATE_JOB',
   FetchContractors = 'FETCH_CONTRACTORS'
 }
 
@@ -25,6 +26,7 @@ export type Actions = {
   [ActionTypes.FetchJobs](context: Context, payload: { page: number, limit: number }): void
   [ActionTypes.DeleteJob](context: Context, payload: { id: string }): void
   [ActionTypes.CreateJob](context: Context, payload: JobCreation): void
+  [ActionTypes.UpdateJob](context: Context, payload: Omit<Job, 'contractor'>): void
   [ActionTypes.FetchContractors](context: Context): void
 }
 
@@ -66,14 +68,16 @@ export const actions: ActionTree<State, State> & Actions = {
   },
 
   async [ActionTypes.DeleteJob] ({ commit, state }, { id }) {
-    await api.delete('/jobs', { params: { id } })
+    try {
+      await api.delete('/jobs', { params: { id } })
 
-    const jobs = get(state, 'fetchedJobs.jobs', [])
-    const filteredJobs = filter(jobs, (job) => id !== get(job, 'id', ''))
-    const total = state.fetchedJobs.total - 1
+      const jobs = get(state, 'fetchedJobs.jobs', [])
+      const filteredJobs = filter(jobs, (job) => id !== get(job, 'id', ''))
+      const total = state.fetchedJobs.total - 1
 
-    commit(MutationType.SetFetchedJobs, filteredJobs)
-    commit(MutationType.SetFetchedJobsTotal, total)
+      commit(MutationType.SetFetchedJobs, filteredJobs)
+      commit(MutationType.SetFetchedJobsTotal, total)
+    } catch {}
   },
 
   async [ActionTypes.CreateJob] ({ commit, state }, jobPayload) {
@@ -88,6 +92,22 @@ export const actions: ActionTree<State, State> & Actions = {
 
       commit(MutationType.SetFetchedJobs, jobs)
       commit(MutationType.SetFetchedJobsTotal, total)
+    } catch {}
+  },
+
+  async [ActionTypes.UpdateJob] ({ commit, state }, jobPayload) {
+    try {
+      const id = get(jobPayload, 'id', '')
+      unset(jobPayload, 'id')
+
+      const { data: updatedJob } = await api.put<Job>('/jobs', jobPayload, { params: { id } })
+
+      const jobs = get(state, 'fetchedJobs.jobs', []) as Job[]
+      const updatedIndex = findIndex(jobs, (job) => get(job, 'id') === id)
+
+      jobs[updatedIndex] = updatedJob
+
+      commit(MutationType.SetFetchedJobs, jobs)
     } catch {}
   },
 

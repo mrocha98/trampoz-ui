@@ -60,7 +60,7 @@
           </Column>
           <Column header="Actions">
             <template #body="slotProps">
-                <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-mr-2" @click="editJob(slotProps.data)" />
+                <Button icon="pi pi-pencil" class="p-button-rounded p-button-warning p-mr-2" @click="openEditDialog(slotProps.data)" />
                 <Button icon="pi pi-trash" class="p-button-rounded p-button-danger" @click="openDeleteDialog(slotProps.data)" />
             </template>
           </Column>
@@ -117,21 +117,85 @@
             <label for="city">City</label>
             <InputText id="city" name="city" v-model="dialog.job.city" required />
           </div>
-          <div class="field p-col-6">
+          <div class="p-field p-col-6">
             <label>Type</label>
-            <div class="p-field-radiobutton p-mt-2">
-              <RadioButton id="isRemoteTrue" name="isRemote" :value="true" v-model="dialog.job.isRemote" />
-              <label for="isRemote">Remote</label>
-            </div>
-            <div class="p-field-radiobutton">
-              <RadioButton id="isRemoteFalse" name="isRemote" :value="false" v-model="dialog.job.isRemote" />
-              <label for="isRemoteFalse">Presential</label>
+            <div class="p-formgroup-inline p-mt-2">
+              <div class="p-field-radiobutton">
+                <RadioButton id="isRemoteTrue" name="isRemote" :value="true" v-model="dialog.job.isRemote" />
+                <label for="isRemote">Remote</label>
+              </div>
+              <div class="p-field-radiobutton">
+                <RadioButton id="isRemoteFalse" name="isRemote" :value="false" v-model="dialog.job.isRemote" />
+                <label for="isRemoteFalse">Presential</label>
+              </div>
             </div>
           </div>
         </div>
         <div class="p-text-right">
           <Button label="Cancel" icon="pi pi-times" class="p-button-danger p-mr-3" @click="closeCreateDialog()"/>
           <Button label="Create" icon="pi pi-check" class="p-button-success" type="submit" />
+        </div>
+      </form>
+    </Dialog>
+
+    <Dialog :visible="dialog.isEditOpen" :closable="false" header="Edit job" :modal="true" style="min-width: 50%">
+      <form @submit.prevent="editJob" class="p-text-left">
+        <div class="p-fluid p-formgrid p-grid">
+          <div class="p-field p-col-12">
+            <label for="contractor">Contractor</label>
+            <ContractorInfo :name="dialog.job.contractor.companyName" :logoLink="dialog.job.contractor.companyLogoLink" />
+          </div>
+          <div class="p-field p-col-12">
+            <label for="title">Title</label>
+            <InputText id="title" name="title" v-model="dialog.job.title" required />
+          </div>
+          <div class="p-field p-col-12">
+            <label for="description">Description</label>
+            <Textarea id="description" name="description" v-model="dialog.job.description" :autoResize="true" required />
+          </div>
+          <div class="p-field p-col-2">
+            <label for="state">State</label>
+            <InputText id="state" name="state" v-model="dialog.job.state" required maxlength="2" />
+          </div>
+          <div class="p-field p-col-10">
+            <label for="city">City</label>
+            <InputText id="city" name="city" v-model="dialog.job.city" required />
+          </div>
+          <div class="p-field p-col-6">
+            <label>Type</label>
+            <div class="p-formgroup-inline p-mt-2">
+              <div class="p-field-radiobutton">
+                <RadioButton id="isRemoteTrue" name="isRemote" :value="true" v-model="dialog.job.isRemote" />
+                <label for="isRemote">Remote</label>
+              </div>
+              <div class="p-field-radiobutton">
+                <RadioButton id="isRemoteFalse" name="isRemote" :value="false" v-model="dialog.job.isRemote" />
+                <label for="isRemoteFalse">Presential</label>
+              </div>
+            </div>
+          </div>
+          <div class="p-field p-col-6">
+            <label>Status</label>
+            <div class="p-formgroup-inline p-mt-2">
+              <div class="p-field-radiobutton">
+                <RadioButton id="isOpenTrue" name="isOpen" :value="true" v-model="dialog.job.isOpen" />
+                <label for="isOpenTrue">Open</label>
+              </div>
+              <div class="p-field-radiobutton">
+                <RadioButton id="isOpenFalse" name="isOpen" :value="false" v-model="dialog.job.isOpen" />
+                <label for="isOpenFalse">Closed</label>
+              </div>
+            </div>
+          </div>
+          <div class="p-field p-col-3">
+            <label for="publishingDate" class="p-d-block">Publishing Date</label>
+            <Calendar id="publishingDate" name="publishingDate" v-model="dialog.job.publishingDate" required dateFormat="yy-mm-dd"
+              :showIcon="true" :showWeek="true" :showButtonBar="true" :monthNavigator="true" :yearNavigator="true" yearRange="2000:2040" />
+          </div>
+        </div>
+        <div class="p-text-right">
+          <Button label="Cancel" icon="pi pi-times" class="p-button-danger p-mr-3" @click="closeEditDialog()"/>
+          <Button label="Confirm" icon="pi pi-check" class="p-button-success" type="submit" />
         </div>
       </form>
     </Dialog>
@@ -266,6 +330,32 @@ export default class Jobs extends Vue {
      await this.store.dispatch(ActionTypes.CreateJob, jobToSubmit)
 
      this.closeCreateDialog()
+   }
+
+   openEditDialog (job: Job) {
+     set(this.dialog, 'job', job)
+
+     this.dialog.isEditOpen = true
+   }
+
+   closeEditDialog () {
+     this.dialog.isEditOpen = false
+     this.resetDialogJob()
+   }
+
+   async editJob () {
+     if (this.isJobInvalid()) return
+
+     const jobToSubmit = cloneDeep(this.dialog.job)
+     unset(jobToSubmit, 'contractor')
+
+     const publishingDate = new Date(get(jobToSubmit, 'publishingDate'))
+     const parsedPublishingDate = formatISO(publishingDate, { representation: 'date' })
+     set(jobToSubmit, 'publishingDate', parsedPublishingDate)
+
+     await this.store.dispatch(ActionTypes.UpdateJob, jobToSubmit)
+
+     this.closeEditDialog()
    }
 }
 </script>

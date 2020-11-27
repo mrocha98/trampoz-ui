@@ -7,7 +7,6 @@ import 'primeflex/primeflex.min.css'
 // import only what is used
 import Button from 'primevue/button'
 import Calendar from 'primevue/calendar'
-import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import RadioButton from 'primevue/radiobutton'
@@ -24,7 +23,6 @@ import Toolbar from 'primevue/toolbar'
 export default {
   Button,
   Calendar,
-  InputNumber,
   InputText,
   Textarea,
   SelectButton,
