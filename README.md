@@ -1,6 +1,6 @@
 <div align="center">
     <h1>TrampoZ - UI</h1>
-    <img alt="TrampoZ logo" src="src/assets/logo.svg"
+    <img alt="TrampoZ logo" src="src/assets/logo.png"
     style="height: 20%; width: 20%;" />
 </div>
 
@@ -35,11 +35,13 @@ Confira outros repositórios relacionados:
 
 ## 🔬 Tecnologias utilizadas
 
-- VueJS 3
-- Vue Router
-- VueX
-- Typescript
-- PrimeVue
+- [VueJS 3](https://v3.vuejs.org/guide/introduction.html)
+- [Vue Router](https://router.vuejs.org/)
+- [VueX](https://vuex.vuejs.org/)
+- [Typescript](https://www.typescriptlang.org/)
+- [PrimeVue](https://www.primefaces.org/primevue/showcase/#/setup)
+- [date-fns](https://date-fns.org/)
+- [axios](https://github.com/axios/axios)
 
 ## 🚀 Executando a aplicação
 
